@@ -129,6 +129,58 @@ def get_recommended_products_by_customer_task():
 
   return result
 
+pending_predict_future_sales = False
+@app.route("/predict_future_sales", methods = ["GET"])
+def do_predict_future_sales():
+  if pending_predict_future_sales:
+    result = {
+      "success": False,
+      "message": "Task is pending"
+    }
+  else:
+    result = {
+      "success": True,
+      "message": "Task started"
+    }
+
+    thread = threading.Thread(target = predict_future_sales_task)
+    thread.start()
+
+  return result
+
+sys.path.append("predict_future_sales")
+def predict_future_sales_task():
+  global pending_predict_future_sales
+  pending_predict_future_sales = True
+
+  from predict_future_sales import task
+  try:
+    task()
+    pending_predict_future_sales = False
+  except Exception as e:
+    pending_predict_future_sales = False
+    print("Error:", e)
+  
+sys.path.append("draw_sales_forecast")
+@app.route("/draw-sales-forecast", methods = ["GET"])
+def draw_sales_forecast_task():
+  from draw_sales_forecast import task
+  try:
+    image_data = task()
+    result = {
+      "success": True,
+      "message": {
+        "image_data": image_data
+      }
+    }
+  except Exception as e:
+    result = {
+      "success": False,
+      "message": f"Error: {e}"
+    }
+
+  return result
+
 @app.errorhandler(404)
 def notFound(error):
   result = {

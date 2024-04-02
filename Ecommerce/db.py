@@ -1,5 +1,6 @@
 import mysql.connector
 import pandas as pd
+from datetime import datetime
 
 def connect():
   connection = mysql.connector.connect(
@@ -445,3 +446,99 @@ def get_recommended_products_by_customer(model, customer_id, limit):
   recommended_product_ids = get_best_seller_products_by_category(int(predicted_category_id), limit)
 
   return recommended_product_ids
+
+# 07-predict-future-sales
+
+def get_last_sale_date():
+  _, cursor = connect()
+
+  sql = '''
+    SELECT Left(MAX(date_created), 10) date
+    FROM wp_wc_order_product_lookup
+  '''
+
+  cursor.execute(sql)
+
+  result = cursor.fetchone()
+
+  last_sale_date = datetime.strptime(result["date"], "%Y-%m-%d")
+
+  return last_sale_date
+
+def get_sales_between_two_dates(start_date, end_date):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT LEFT(date_created, 10) as date, sum(product_net_revenue) as sales
+    FROM wp_wc_order_product_lookup
+    WHERE date_created BETWEEN (%s) AND (%s)
+    GROUP BY date
+    ORDER BY date
+  '''
+
+  cursor.execute(sql, (start_date, end_date))
+
+  results = cursor.fetchall()
+
+  entries = []
+  for row in results:
+    entries.append({
+      "date": row["date"],
+      "sales": row["sales"]
+    })
+  
+  data = pd.DataFrame(entries)
+
+  return data
+
+def export_sales_forecast(forecast):
+  connection, cursor = connect()
+
+  sql = "DROP TABLE IF EXISTS wp_wc_sales_forecast"
+  
+  cursor.execute(sql)
+
+  sql = '''
+    CREATE TABLE wp_wc_sales_forecast (
+      ID int(11) NOT NULL AUTO_INCREMENT,
+      date datetime NOT NULL,
+      sales float NOT NULL,
+      PRIMARY KEY (ID)
+    )
+  '''
+  
+  cursor.execute(sql)
+  
+  connection.commit()
+
+  for index, row in forecast.iterrows():
+    date = index.strftime("%Y-%m-%d")
+    sales = float(row[0])
+
+    sql = '''
+      INSERT INTO wp_wc_sales_forecast VALUES (NULL, %s, %s)
+    '''
+  
+    cursor.execute(sql, (date, sales))
+    
+    connection.commit()
+
+def get_sales_forecast():
+  _, cursor = connect()
+
+  sql = "SELECT * FROM wp_wc_sales_forecast"
+  
+  cursor.execute(sql)
+
+  results = cursor.fetchall()
+
+  entries = []
+  for row in results:
+    entries.append({
+      "date": row["date"],
+      "sales": row["sales"],
+    })
+  
+  data = pd.DataFrame(entries)
+
+  return data
