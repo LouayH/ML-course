@@ -155,21 +155,293 @@ def get_recommended_products_by_product(product_id):
 
   return data
 
+# 05-products-by-customer-classification.ipynb
+
+def get_category_title(category_id):
   _, cursor = connect()
 
-  sql = "SELECT * FROM wp_wc_sales_forecast"
-  
+  sql = '''
+    SELECT name FROM wp_terms
+    LEFT JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id
+    WHERE wp_term_taxonomy.taxonomy = 'product_cat'
+    AND wp_terms.term_id = (%s)
+  '''
+
+  cursor.execute(sql, (category_id, ))
+
+  result = cursor.fetchone()
+
+  return result["name"] if result else None
+
+def get_product_categories(product_id):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT wp_term_relationships.object_id, wp_term_taxonomy.term_id
+    FROM wp_term_relationships
+    INNER JOIN wp_term_taxonomy ON wp_term_taxonomy.term_taxonomy_id = wp_term_relationships.term_taxonomy_id
+    WHERE wp_term_taxonomy.taxonomy = 'product_cat'
+    AND wp_term_relationships.object_id = (%s)
+  '''
+
+  cursor.execute(sql, (product_id, ))
+
+  results = cursor.fetchall()
+
+  category_ids = []
+
+  for row in results:
+    category_ids.append(row["term_id"])
+
+  return category_ids
+
+def add_to_category_list(category_list, term_id, customer_id):
+  for category in category_list:
+    if category["term_id"] == term_id and category["customer_id"] == customer_id:
+      category["count"] += 1
+      return None
+    
+  category =  {
+    "term_id": term_id,
+    "customer_id": customer_id,
+    "count": 1
+  }
+
+  category_list.append(category)
+
+def build_category_by_customer_data():
+  _, cursor = connect()
+
+  sql = "SELECT ID FROM wp_users ORDER BY ID"
+
   cursor.execute(sql)
 
   results = cursor.fetchall()
 
   entries = []
   for row in results:
-    entries.append({
-      "date": row["date"],
-      "sales": row["sales"],
-    })
+    user_id = row["ID"]
+
+    # check if user is customer
+    sql = '''
+      SELECT * FROM wp_wc_customer_lookup WHERE user_id = (%s)
+    '''
+
+    cursor.execute(sql, (user_id, ))
+    result = cursor.fetchone()
+    customer_id = result["customer_id"] if result else None
+
+    if customer_id:
+      # get user's meta
+      sql = '''
+        SELECT * FROM wp_usermeta WHERE user_id = (%s) and meta_key IN ('country', 'age', 'gender')
+      '''
+
+      cursor.execute(sql, (user_id, ))
+      usermeta = cursor.fetchall()
+
+      country_meta = next(meta for meta in usermeta if meta["meta_key"] == "country")
+      country = country_meta["meta_value"] if country_meta else "unknown"
+
+      age_meta = next(meta for meta in usermeta if meta["meta_key"] == "age")
+      age = age_meta["meta_value"] if age_meta else "unknown"
+
+      gender_meta = next(meta for meta in usermeta if meta["meta_key"] == "gender")
+      gender = gender_meta["meta_value"] if gender_meta else "unknown"
+
+      # get purchased products by the customer
+      sql = '''
+        SELECT * from wp_wc_order_product_lookup WHERE customer_id = (%s)
+      '''
+      
+      cursor.execute(sql, (customer_id, ))
+
+      order_products = cursor.fetchall()
+
+      category_list = []
+      for product in order_products:
+        customer_id = product["customer_id"]
+        product_id = product["product_id"]
+
+        term_ids = get_product_categories(product_id)
+
+        for term_id in term_ids:
+          add_to_category_list(category_list, term_id, customer_id)
+
+      category_list = sorted(category_list, key = lambda c: c["count"], reverse = True)
+
+      if len(category_list) > 0:
+        term_id = category_list[0]["term_id"]
+        term_title = get_category_title(term_id)
+        purchase_count = category_list[0]["count"]
+
+        entries.append({
+          "user_id": user_id,
+          "customer_id": customer_id,
+          "country": country,
+          "age": age,
+          "gender": gender,
+          "term_id": term_id,
+          "term_title": term_title,
+          "purchase_count": purchase_count,
+        })
   
   data = pd.DataFrame(entries)
 
   return data
+
+def export_country_codes(encoder):
+  connection, cursor = connect()
+
+  sql = "DROP TABLE IF EXISTS wp_wc_country_codes"
+  
+  cursor.execute(sql)
+
+  sql = '''
+    CREATE TABLE wp_wc_country_codes (
+      ID int(11) NOT NULL AUTO_INCREMENT,
+      country char(2) NOT NULL,
+      code int(11) NOT NULL,
+      PRIMARY KEY (ID)
+    )
+  '''
+  
+  cursor.execute(sql)
+  
+  connection.commit()
+
+  for country in encoder.classes_:
+    code = encoder.transform([country])[0]
+    code = int(code)
+
+    sql = '''
+      INSERT INTO wp_wc_country_codes VALUES (NULL, %s, %s)
+    '''
+
+    cursor.execute(sql, (country, code))
+  
+    connection.commit()
+
+def get_country_code(country):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT code FROM wp_wc_country_codes WHERE country = (%s)
+  '''
+  
+  cursor.execute(sql, (country, ))
+  
+  result = cursor.fetchone()
+
+  return result["code"] if result else None
+
+def export_gender_codes(encoder):
+  connection, cursor = connect()
+
+  sql = "DROP TABLE IF EXISTS wp_wc_gender_codes"
+  
+  cursor.execute(sql)
+
+  sql = '''
+    CREATE TABLE wp_wc_gender_codes (
+      ID int(11) NOT NULL AUTO_INCREMENT,
+      gender char(10) NOT NULL,
+      code int(11) NOT NULL,
+      PRIMARY KEY (ID)
+    )
+  '''
+  
+  cursor.execute(sql)
+  
+  connection.commit()
+
+  for gender in encoder.classes_:
+    code = encoder.transform([gender])[0]
+    code = int(code)
+
+    sql = '''
+      INSERT INTO wp_wc_gender_codes VALUES (NULL, %s, %s)
+    '''
+
+    cursor.execute(sql, (gender, code))
+  
+    connection.commit()
+
+def get_gender_code(gender):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT code FROM wp_wc_gender_codes WHERE gender = (%s)
+  '''
+  
+  cursor.execute(sql, (gender, ))
+  
+  result = cursor.fetchone()
+
+  return result["code"] if result else None
+
+def get_best_seller_products_by_category(category_id, limit):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT wp_term_taxonomy.term_id, wp_wc_order_product_lookup.product_id, sum(wp_wc_order_product_lookup.product_qty) sales
+    FROM wp_wc_order_product_lookup
+    INNER JOIN wp_term_relationships ON wp_term_relationships.object_id = wp_wc_order_product_lookup.product_id
+    INNER JOIN wp_term_taxonomy ON wp_term_taxonomy.term_taxonomy_id = wp_term_relationships.term_taxonomy_id
+    WHERE wp_term_taxonomy.taxonomy = 'product_cat'
+    AND wp_term_taxonomy.term_id = (%s)
+    GROUP BY wp_term_taxonomy.term_id, wp_wc_order_product_lookup.product_id
+    ORDER BY sales DESC
+    LIMIT %s
+  '''
+
+  cursor.execute(sql, (category_id, limit))
+
+  results = cursor.fetchall()
+
+  product_ids = [row["product_id"] for row in results]
+
+  return product_ids
+
+def predict_category_by_customer(model, customer_details):
+  prediction = model.predict([customer_details])
+
+  return prediction[0]
+
+def get_recommended_products_by_customer(model, customer_id, limit):
+  _, cursor = connect()
+
+  sql = '''
+    SELECT user_id FROM wp_wc_customer_lookup WHERE customer_id = (%s)
+  '''
+  
+  cursor.execute(sql, (customer_id, ))
+  
+  result = cursor.fetchone()
+
+  user_id = result["user_id"] if result else None
+
+  # get user's meta
+  sql = '''
+    SELECT * FROM wp_usermeta WHERE user_id = (%s) and meta_key IN ('country', 'age', 'gender')
+  '''
+
+  cursor.execute(sql, (user_id, ))
+  usermeta = cursor.fetchall()
+
+  country_meta = next(meta for meta in usermeta if meta["meta_key"] == "country")
+  country = country_meta["meta_value"] if country_meta else "unknown"
+  country = get_country_code(country)
+
+  age_meta = next(meta for meta in usermeta if meta["meta_key"] == "age")
+  age = age_meta["meta_value"] if age_meta else "unknown"
+
+  gender_meta = next(meta for meta in usermeta if meta["meta_key"] == "gender")
+  gender = gender_meta["meta_value"] if gender_meta else "unknown"
+  gender = get_gender_code(gender)
+
+  predicted_category_id = predict_category_by_customer(model, [country, age, gender])
+
+  recommended_product_ids = get_best_seller_products_by_category(int(predicted_category_id), limit)
+
+  return recommended_product_ids
