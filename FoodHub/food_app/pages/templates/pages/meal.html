@@ -1,0 +1,97 @@
+{% extends 'pages/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    وجبة | {{meal.name}}
+{% endblock %}
+
+{% block style %}
+<style>
+body {
+    font-family: Varela Round;
+    background: #f1f1f1;
+}
+
+a {
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="container pt-3">
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item" aria-current="page"><a href="{% url 'meals-list' %}" class="text-decoration-none text-dark">الوجبات</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{meal.name}}</li>
+        </ol>
+    </nav>
+    <h2>
+        {{ meal.name }}
+    </h2>
+    <div class="row border border-light rounded">
+
+        <div class="col-md-8">
+            <div class="row">
+                <img id="meal-image" src="{{ meal.img.url }}" class="d-block w-100" alt="...">
+            </div>
+        </div>
+        <div class="col-md-4 mt-4 mt-md-0">
+            <h4>
+                <b>
+                    {{ meal.price|floatformat:2 }} $
+                </b>
+            </h4>
+            <form action="/cart/order/" method="POST" class="row pt-3">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path|urlencode }}">
+                <input type="hidden" name="meal_id" value="{{ view.kwargs.pk }}">
+                <div class="col-4">
+                    <input id="quantity" type="number" class="form-control border-color" name="quantity" value=1 min="1" max="50" >
+                </div>
+                <div class="col-8">
+                    <input type="submit" class="btn border-0 w-100" value="Add To Cart >"
+                    style="background-color: #03c200;background-image: linear-gradient(to bottom, #03c200 0%, #048300 100%); color:white">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-tabs my-5" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">
+                        المكونات
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">
+                        خطوات التحضير
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                    {{ meal.ingredients }}
+                </div>
+                <div class="tab-pane fade p-5" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                    {{ meal.instructions }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

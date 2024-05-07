@@ -1,0 +1,50 @@
+{% extends 'pages/base.html' %}
+
+{% block title %}
+    اقتراح وجبات مماثلة
+{% endblock %}
+
+{% block style %}
+<style>
+body {
+    font-family: Varela Round;
+    background: #f1f1f1;
+}
+
+a {
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+
+{% block main %}
+
+    <form dir="rtl" action="" method="post" enctype="multipart/form-data" class="form-control-lg w-50 mx-auto">
+        {% csrf_token %}
+        <label for="id_images" class="form-label">الصور</label>
+        <input type="file" id="id_images" name="image" class="form-control" onchange="updateList()" required>
+        <br >
+        <ul id="images_list" class="list-group">
+        </ul>
+        <br>
+        <input type="submit" value="تحميل" />
+    </form>
+
+    <script>
+        updateList = function() {
+            var input = document.getElementById('id_images');
+            var output = document.getElementById('images_list');
+            var children = "";
+            for (var i = 0; i < input.files.length; ++i) {
+                children += `<li class="list-group-item">${input.files.item(i).name}</li>`;
+            }
+            output.innerHTML = `
+            <ul id="images_list" class="list-group">
+                ${children}
+            </ul>
+            `;
+        }
+    </script>
+
+{% endblock %}

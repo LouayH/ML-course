@@ -1,0 +1,32 @@
+{% extends 'pages/base.html' %}
+
+{% block title %}
+    إنشاء حساب
+{% endblock %}
+
+{% block style %}
+<style>
+body {
+    font-family: Varela Round;
+    background: #f1f1f1;
+    
+}
+
+a {
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="w-50 mx-auto my-5 py-5 border border-secondary rounded" dir="rtl">
+    <h2 class="text-center mb-5">إنشاء حساب</h2>
+    <form method="post" class="col-lg-6 offset-lg-3 mx-auto">
+        <div class="row justify-content-center">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-outline-success btn-block">أنشئ حساب</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'pages/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    تحليل البيانات
+{% endblock %}
+
+{% block style %}
+<style>
+body {
+    font-family: Varela Round;
+    background: #f1f1f1;
+}
+
+a {
+    text-decoration: none;
+}
+
+#update-button {
+    width: 50%;
+}
+
+#update-button:hover {
+    color: white;
+}
+
+</style>
+{% endblock %}
+
+{% block main %}
+
+<div id="alert-msg" class="alert alert-warning fade show text-center w-50 mx-auto" role="alert">
+    {{msg}}
+</div>
+
+<div class="row px-5 g-4 mb-2 mx-auto">
+    <a href="{% url 'data-analysis' %}" class="text-center">
+        <button id="update-button" type="button" class="btn btn-outline-success btn-lg btn-block">
+            تحديث
+        </button>
+    </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-2">
+    {% for plot in plots %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h2 class="text-center">{{plot.title}}</h2>
+                </div>
+                <img src="data:image/png;base64,{{plot.data}}">
+            </div>
+        </div>
+    {% empty %}
+        <h3>No plots to show</h3>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertMsg = document.getElementById("alert-msg");
+        setTimeout(function() {
+            alertMsg.parentNode.removeChild(alertMsg);
+        }, 3000);
+    });
+</script>
+
+{% endblock %}

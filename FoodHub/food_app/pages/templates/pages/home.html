@@ -1,0 +1,184 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Start your development with FoodHut landing page.">
+    <meta name="author" content="Devcrud">
+    <title>مطعم الذكاء الاصطناعي</title>
+   
+    <!-- font icons -->
+    <link rel="stylesheet" href="{% static 'assets/vendors/themify-icons/css/themify-icons.css' %}">
+
+    <link rel="stylesheet" href="{% static 'assets/vendors/animate/animate.css' %}">
+
+    <!-- Bootstrap + FoodHut main styles -->
+	<link rel="stylesheet" href="{% static 'assets/css/foodhut.css' %}">
+</head>
+<body data-spy="scroll" data-target=".navbar" data-offset="40" id="home">
+    
+    <!-- Navbar -->
+    <nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">الصفحة الرئيسية</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'meals-list' %}">قائمة الوجبات</a>
+                </li>
+                {% if request.user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'data-analysis' %}">تحليل البيانات</a>
+                </li>
+                {% endif %}
+            </ul>
+            <a class="navbar-brand m-auto" href="#">
+                <img src="{% static 'assets/imgs/logo.svg' %}" class="brand-img" alt="">
+                <span class="brand-txt">مطعم الذكاء الاصطناعي</span>
+            </a>
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'ingredients-recognition' %}">الاقتراح حسب المكونات</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'meals-recognition' %}">الاقتراح حسب الوجبات</a>
+              </li>
+              {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">سجل خروج</a>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">سجل دخول</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'signup' %}">أنشئ حساب</a>
+                </li>
+              {% endif %}
+            </ul>
+            
+
+      
+        </div>
+    </nav>
+    <!-- header -->
+    <header id="home" class="header">
+        <div class="overlay text-white text-center">
+            <h1 class="display-2 font-weight-bold my-3">مطعم الذكاء الاصطناعي</h1>
+            <h2 class="display-4 mb-5">كل ما هو لذيذ</h2>
+            <a class="btn btn-lg btn-primary" href="{% url 'meals-list' %}">تصفح قائمة الوجبات التي نقدمها</a>
+        </div>
+    </header>
+
+    <!--  About Section  -->
+    <div id="ingredients-recommendation" class="container-fluid wow fadeIn" data-wow-duration="1.5s">
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="row justify-content-center">
+                    <div class="col-sm-8 py-5 my-5">
+                        <h2 class="mb-4 text-right" dir="rtl">الاقتراح حسب المكونات</h2>
+                        <p dir="rtl" class="text-right">
+                            يمكنك استعمال هذه الأداة عن طريق تحميل صورة لكل مكون لديك و نموذج الذكاء الاصطناعي الخاص بنا
+                            سيتعرف على هذه المكونات و يقوم بعرض 5 وجبات تحوي على هذه المكونات.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  About Section  -->
+    <div id="meals-recommendation" class="container-fluid wow fadeIn" data-wow-duration="1.5s">
+        <div class="row">
+            
+            <div class="col-lg-6 mx-auto">
+                <div class="row justify-content-center">
+                    <div class="col-sm-8 py-5 my-5" >
+                        <h2 class="mb-4 text-right" dir="rtl">الاقتراح حسب الوجبات</h2>
+                        <p dir="rtl" class="text-right">
+                            يمكنك استعمال هذه الأداة عن طريق تحميل صورة وجبة أعجبتك أو رأيتها على الانترنت، و نموذج الذكاء الاصطناعي
+                            الخاص بنا سيقوم بالتعرف على هذه الوجبة و استخراج المكونات الخاصة بها و من ثم إيجاد أكثر 5 وجبات
+                            مشابهة لهذه الوجبة.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  About Section  -->
+    <div id="personal-recommendation" class="container-fluid wow fadeIn" data-wow-duration="1.5s">
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="row justify-content-center">
+                    <div class="col-sm-8 py-5 my-5">
+                        <h2 class="mb-4 text-right" dir="rtl">اقتراحات شخصية</h2>
+                        <p dir="rtl" class="text-right">
+                            باستعمال هذه الأداة سوف تحصل على 3 اقتراحات بناء على طلباتك السابقة و جنسك و عمرك.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  personal recommendation Section  -->
+    {% if user.is_authenticated %}
+        <div id="gallary" class="text-center bg-dark text-light has-height-md middle-items wow fadeIn">
+            <h2 class="section-title">نقترح لك الوجبات التالية</h2>
+        </div>
+        <div class="gallary row">
+            {% for meal in recommended_meals %}
+                <div class="col-sm-6 col-lg-3 gallary-item wow fadeIn mx-auto">
+                    <img src="{{ meal.img.url }}" alt="template by DevCRID http://www.devcrud.com/" class="gallary-img">
+                    <a href="{% url 'meal-details' pk=meal.id %}" class="gallary-overlay"></a>
+                </div>
+            {% empty %}
+                <p>لا توجد وجبات</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- page footer  -->
+    <div class="container-fluid bg-dark text-light has-height-md middle-items border-top text-center wow fadeIn">
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>EMAIL US</h3>
+                <P class="text-muted">info@website.com</P>
+            </div>
+            <div class="col-sm-4">
+                <h3>CALL US</h3>
+                <P class="text-muted">(123) 456-7890</P>
+            </div>
+            <div class="col-sm-4">
+                <h3>FIND US</h3>
+                <P class="text-muted">12345 Fake ST NoWhere AB Country</P>
+            </div>
+        </div>
+    </div>
+    <div class="bg-dark text-light text-center border-top wow fadeIn">
+        <p class="mb-0 py-3 text-muted small">&copy; Copyright <script>document.write(new Date().getFullYear())</script> Made with <i class="ti-heart text-danger"></i> By <a href="http://devcrud.com">DevCRUD</a></p>
+    </div>
+    <!-- end of page footer -->
+
+	<!-- core  -->
+    <script src="{% static 'assets/vendors/jquery/jquery-3.4.1.js' %}"></script>
+    <script src="{% static 'assets/vendors/bootstrap/bootstrap.bundle.js' %}"></script>
+
+    <!-- bootstrap affix -->
+    <script src="{% static 'assets/vendors/bootstrap/bootstrap.affix.js' %}"></script>
+
+    <!-- wow.js -->
+    <script src="{% static 'assets/vendors/wow/wow.js' %}"></script>
+    
+    <!-- FoodHut js -->
+    <script src="{% static 'assets/js/foodhut.js' %}"></script>
+
+</body>
+</html>

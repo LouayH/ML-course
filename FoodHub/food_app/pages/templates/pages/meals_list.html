@@ -1,0 +1,118 @@
+{% extends 'pages/base.html' %}
+
+{% load query_transform %}
+
+{% block title %}
+    قائمة الوجبات
+{% endblock %}
+
+{% block style %}
+<style>
+body {
+    font-family: Varela Round;
+    background: #f1f1f1;
+}
+
+a {
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+
+<div class="container py-3">
+    {% if recognized_meal %}
+    <div class="row" dir="rtl">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <p><b>الوجبة التي تم التعرف عليها:</b> {{recognized_meal}}</h2>
+        </div>
+    </div>
+    {% endif %}
+    {% if ingredients %}
+    <div class="row" dir="rtl">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <h2>المكونات التي تم التعرف عليها</h2>
+            <ul>
+                {% for ingredient in ingredients %}
+                    <li><large>{{ingredient}}</large></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-2">
+            {% for meal in meals %}
+                <div class="col">
+                    <a href="{% url 'meal-details' pk=meal.id %}" class="text-decoration-none text-dark">
+                        <div class="card h-100">
+                            <img src="{{ meal.img.url }}" class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ meal.name }}</h5>
+                                <hr />
+                                <p class="card-text">
+                                    {{ meal.ingredients }}
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <large class="text-muted">
+                                    {{ meal.price }} $
+                                </large>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <p>لا توجد وجبات</p>
+            {% endfor %}
+        </div>
+        <nav aria-label="...">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% query_transform  page=page_obj.previous_page_number %}">
+                            السابق
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% query_transform  page=page_obj.previous_page_number %}">
+                            {{ page_obj.previous_page_number }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            السابق
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">{{ page_obj.number }}</a>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% query_transform  page=page_obj.next_page_number %}">
+                            {{ page_obj.next_page_number }}
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% query_transform  page=page_obj.next_page_number %}">
+                            التالي
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            التالي
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+{% endblock %}

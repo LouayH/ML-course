@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{% block meta_description %}{% endblock %}">
+        
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+        <title>
+            {% block title %}
+                default title 
+            {% endblock %}
+        </title>
+        {% block style %}
+            
+        {% endblock %}
+
+        {% block upper_scripts %}
+
+        {% endblock %}
+    </head>
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
+            <div class="container-fluid">
+              <a class="navbar-brand" href="{% url 'home' %}">مطعم الذكاء الاصطناعي</a>
+              |
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">الصفحة الرئيسية</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'meals-list' %}">قائمة الوجبات</a>
+                  </li>
+                  {% if request.user.is_superuser %}
+                  <li class="nav-item">
+                      <a class="nav-link" href="{% url 'data-analysis' %}">تحليل البيانات</a>
+                  </li>
+                  {% endif %}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      أدوات الذكاء الاصطناعي
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <li><a class="dropdown-item" href="{% url 'ingredients-recognition' %}">الاقتراح حسب المكونات</a></li>
+                      <li><a class="dropdown-item" href="{% url 'meals-recognition' %}">الاقتراح حسب الوجبات</a></li>
+                    </ul>
+                  </li>
+                </ul>
+                <form action="{% url 'search' %}" method="POST" class="d-flex mx-auto w-50">
+                  {% csrf_token %}
+                  <input class="form-control me-2" name='search' type="search" placeholder="بحث" aria-label="Search">
+                  <button class="btn btn-outline-success" type="submit">بحث</button>
+                </form>
+                {% if request.user.is_authenticated %}
+                <span class="navbar-text px-3">{{request.user.username}}</span>
+                  <a href="{% url 'logout' %}" class="btn btn-danger">سجل خروج</a>
+                {% else %}
+                  <a href="{% url 'login' %}" class="btn btn-success">سجل دخول</a>
+                  <a href="{% url 'signup' %}" class="btn btn-primary mx-1">أنشئ حساب</a>
+                {% endif %}
+              </div>
+            </div>
+          </nav>
+
+        {% block main %}
+
+        {% endblock %}
+
+        <!-- bootstrap cdn -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        
+        <!-- jquery cdn -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+        {% block scripts %}
+
+        {% endblock %}
+    </body>
+</html>
